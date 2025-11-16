@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulation Physique - Régime Sinusoïdal (Version Stable)</title>
+    <title>Simulation ExAO - Version Finale Corrigée</title>
     <style>
+        /* [Conservez les mêmes styles CSS de la version précédente] */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -107,7 +108,6 @@
             width: 100%;
             max-width: 100%;
             height: auto;
-            cursor: crosshair;
         }
         
         .legend {
@@ -149,11 +149,6 @@
             border-radius: 12px;
             text-align: center;
             box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-            transition: transform 0.2s;
-        }
-        
-        .measurement-card:hover {
-            transform: translateY(-5px);
         }
         
         .measurement-card:nth-child(2) {
@@ -233,13 +228,14 @@
             top: 10px;
             right: 10px;
             background: rgba(0,0,0,0.85);
-            color: white;
+            color: #68d391;
             padding: 12px 15px;
             border-radius: 8px;
             font-family: 'Courier New', monospace;
             font-size: 12px;
             z-index: 10;
             border: 1px solid #5a67d8;
+            font-weight: bold;
         }
         
         .time-cursor-control {
@@ -256,10 +252,11 @@
             text-align: center;
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="container">
-        <h1>🧪 Simulation ExAO - Régime Sinusoïdal (Version Stable)</h1>
+        <h1>🧪 Simulation ExAO - Version Finale CORRIGÉE</h1>
         
         <div class="circuit-info">
             <h3>Circuit en cours : <span id="circuitType">Résistance pure</span></h3>
@@ -269,7 +266,7 @@
         <div class="controls">
             <div class="control-group">
                 <label for="dipole">Type de dipôle :</label>
-                <select id="dipole" onchange="updateSimulation()">
+                <select id="dipole" onchange="debouncedUpdate()">
                     <option value="R">Résistance pure (R)</option>
                     <option value="C">Condensateur pur (C)</option>
                     <option value="L">Bobine pure (L)</option>
@@ -281,46 +278,46 @@
             
             <div class="control-group">
                 <label for="resistance">Résistance (Ω) :</label>
-                <input type="range" id="resistance" min="10" max="1000" value="100" oninput="updateValue('resistance'); updateSimulation()">
+                <input type="range" id="resistance" min="10" max="1000" value="100" step="10" oninput="updateValue('resistance'); debouncedUpdate()">
                 <div class="range-value" id="resistanceValue">100 Ω</div>
             </div>
             
             <div class="control-group">
                 <label for="inductance">Inductance (mH) :</label>
-                <input type="range" id="inductance" min="1" max="500" value="100" oninput="updateValue('inductance'); updateSimulation()">
+                <input type="range" id="inductance" min="1" max="500" value="100" step="5" oninput="updateValue('inductance'); debouncedUpdate()">
                 <div class="range-value" id="inductanceValue">100 mH</div>
             </div>
             
             <div class="control-group">
                 <label for="capacitance">Capacité (µF) :</label>
-                <input type="range" id="capacitance" min="1" max="500" value="100" oninput="updateValue('capacitance'); updateSimulation()">
+                <input type="range" id="capacitance" min="1" max="500" value="100" step="5" oninput="updateValue('capacitance'); debouncedUpdate()">
                 <div class="range-value" id="capacitanceValue">100 µF</div>
             </div>
             
             <div class="control-group">
                 <label for="frequency">Fréquence (Hz) :</label>
-                <input type="range" id="frequency" min="10" max="200" value="50" oninput="updateValue('frequency'); updateSimulation()">
+                <input type="range" id="frequency" min="10" max="100" value="50" step="5" oninput="updateValue('frequency'); debouncedUpdate()">
                 <div class="range-value" id="frequencyValue">50 Hz</div>
             </div>
             
             <div class="control-group">
                 <label for="amplitude">Amplitude tension (V) :</label>
-                <input type="range" id="amplitude" min="50" max="400" value="230" oninput="updateValue('amplitude'); updateSimulation()">
+                <input type="range" id="amplitude" min="50" max="400" value="230" step="10" oninput="updateValue('amplitude'); debouncedUpdate()">
                 <div class="range-value" id="amplitudeValue">230 V</div>
             </div>
         </div>
         
         <div class="checkbox-group">
             <div class="checkbox-item">
-                <input type="checkbox" id="showTension" checked onchange="updateSimulation()">
+                <input type="checkbox" id="showTension" checked onchange="debouncedUpdate()">
                 <label for="showTension" style="font-weight: normal;">Tension u(t)</label>
             </div>
             <div class="checkbox-item">
-                <input type="checkbox" id="showCourant" checked onchange="updateSimulation()">
+                <input type="checkbox" id="showCourant" checked onchange="debouncedUpdate()">
                 <label for="showCourant" style="font-weight: normal;">Intensité i(t)</label>
             </div>
             <div class="checkbox-item">
-                <input type="checkbox" id="showPuissance" checked onchange="updateSimulation()">
+                <input type="checkbox" id="showPuissance" checked onchange="debouncedUpdate()">
                 <label for="showPuissance" style="font-weight: normal;">Puissance p(t)</label>
             </div>
         </div>
@@ -329,7 +326,7 @@
             <h3>🎯 Curseur temporel (mesure instantanée)</h3>
             <div class="control-group">
                 <label for="timeCursor">Position sur la courbe :</label>
-                <input type="range" id="timeCursor" min="0" max="100" value="0" oninput="updateCursor()">
+                <input type="range" id="timeCursor" min="0" max="100" value="0" oninput="updateValue('timeCursor'); updateCursor()">
                 <div class="range-value" id="timeCursorValue">t = 0 ms</div>
             </div>
         </div>
@@ -395,17 +392,23 @@
     <script>
         const canvas = document.getElementById('oscilloscope');
         const ctx = canvas.getContext('2d');
-        let params = {};
+        let params = {}, debounceTimer = null;
+        
+        function debouncedUpdate() {
+            clearTimeout(debounceTimer);
+            document.getElementById('oscilloscope').style.opacity = '0.7';
+            debounceTimer = setTimeout(() => {
+                updateSimulation();
+                document.getElementById('oscilloscope').style.opacity = '1';
+            }, 150);
+        }
         
         function updateValue(id) {
             const slider = document.getElementById(id);
             const valueDisplay = document.getElementById(id + 'Value');
             const units = {
-                'resistance': ' Ω',
-                'inductance': ' mH',
-                'capacitance': ' µF',
-                'frequency': ' Hz',
-                'amplitude': ' V'
+                'resistance': ' Ω', 'inductance': ' mH', 'capacitance': ' µF',
+                'frequency': ' Hz', 'amplitude': ' V'
             };
             
             if(id === 'timeCursor') {
@@ -427,83 +430,43 @@
             const omega = 2 * Math.PI * f;
             const Ueff = Umax / Math.sqrt(2);
             
-            let Z, phi, Imax, Ieff, Pactive;
-            let circuitName, formula;
+            let Z, phi, Imax, Ieff, Pactive, circuitName, formula;
             
             switch(dipole) {
                 case 'R':
-                    Z = R;
-                    phi = 0;
-                    Imax = Umax / Z;
-                    Ieff = Ueff / Z;
-                    Pactive = Ueff * Ieff;
-                    circuitName = "Résistance pure";
-                    formula = `u(t) = U·sin(ωt) | i(t) = (U/R)·sin(ωt) | φ = 0°`;
+                    Z = R; phi = 0; Imax = Umax / Z; Ieff = Ueff / Z; Pactive = Ueff * Ieff;
+                    circuitName = "Résistance pure"; formula = `u(t) = U·sin(ωt) | i(t) = (U/R)·sin(ωt) | φ = 0°`;
                     break;
-                    
                 case 'C':
-                    Z = 1 / (omega * C);
-                    phi = -Math.PI / 2;
-                    Imax = Umax / Z;
-                    Ieff = Ueff / Z;
-                    Pactive = 0;
-                    circuitName = "Condensateur pur";
-                    formula = `u(t) = U·sin(ωt) | i(t) = I·sin(ωt+90°) | φ = -90°`;
+                    Z = 1 / (omega * C); phi = -Math.PI / 2; Imax = Umax / Z; Ieff = Ueff / Z; Pactive = 0;
+                    circuitName = "Condensateur pur"; formula = `u(t) = U·sin(ωt) | i(t) = I·sin(ωt+90°) | φ = -90°`;
                     break;
-                    
                 case 'L':
-                    Z = omega * L;
-                    phi = Math.PI / 2;
-                    Imax = Umax / Z;
-                    Ieff = Ueff / Z;
-                    Pactive = 0;
-                    circuitName = "Bobine pure";
-                    formula = `u(t) = U·sin(ωt) | i(t) = I·sin(ωt-90°) | φ = +90°`;
+                    Z = omega * L; phi = Math.PI / 2; Imax = Umax / Z; Ieff = Ueff / Z; Pactive = 0;
+                    circuitName = "Bobine pure"; formula = `u(t) = U·sin(ωt) | i(t) = I·sin(ωt-90°) | φ = +90°`;
                     break;
-                    
                 case 'RL':
-                    const Zl = omega * L;
-                    Z = Math.sqrt(R * R + Zl * Zl);
-                    phi = Math.atan(Zl / R);
-                    Imax = Umax / Z;
-                    Ieff = Ueff / Z;
-                    Pactive = Ueff * Ieff * Math.cos(phi);
-                    circuitName = "Circuit RL série";
-                    formula = `φ = arctan(Lω/R) = ${(phi * 180 / Math.PI).toFixed(1)}°`;
+                    const Zl = omega * L; Z = Math.sqrt(R * R + Zl * Zl); phi = Math.atan(Zl / R);
+                    Imax = Umax / Z; Ieff = Ueff / Z; Pactive = Ueff * Ieff * Math.cos(phi);
+                    circuitName = "Circuit RL série"; formula = `φ = arctan(Lω/R) = ${(phi * 180 / Math.PI).toFixed(1)}°`;
                     break;
-                    
                 case 'RC':
-                    const Zc = 1 / (omega * C);
-                    Z = Math.sqrt(R * R + Zc * Zc);
-                    phi = -Math.atan(Zc / R);
-                    Imax = Umax / Z;
-                    Ieff = Ueff / Z;
-                    Pactive = Ueff * Ieff * Math.cos(phi);
-                    circuitName = "Circuit RC série";
-                    formula = `φ = -arctan(1/RCω) = ${(phi * 180 / Math.PI).toFixed(1)}°`;
+                    const Zc = 1 / (omega * C); Z = Math.sqrt(R * R + Zc * Zc); phi = -Math.atan(Zc / R);
+                    Imax = Umax / Z; Ieff = Ueff / Z; Pactive = Ueff * Ieff * Math.cos(phi);
+                    circuitName = "Circuit RC série"; formula = `φ = -arctan(1/RCω) = ${(phi * 180 / Math.PI).toFixed(1)}°`;
                     break;
-                    
                 case 'RLC':
-                    const Zl2 = omega * L;
-                    const Zc2 = 1 / (omega * C);
-                    const X = Zl2 - Zc2;
-                    Z = Math.sqrt(R * R + X * X);
-                    phi = Math.atan2(X, R);
-                    Imax = Umax / Z;
-                    Ieff = Ueff / Z;
-                    Pactive = Ueff * Ieff * Math.cos(phi);
-                    circuitName = "Circuit RLC série";
-                    formula = `φ = arctan((Lω-1/Cω)/R) = ${(phi * 180 / Math.PI).toFixed(1)}°`;
+                    const Zl2 = omega * L; const Zc2 = 1 / (omega * C); const X = Zl2 - Zc2;
+                    Z = Math.sqrt(R * R + X * X); phi = Math.atan2(X, R);
+                    Imax = Umax / Z; Ieff = Ueff / Z; Pactive = Ueff * Ieff * Math.cos(phi);
+                    circuitName = "Circuit RLC série"; formula = `φ = arctan((Lω-1/Cω)/R) = ${(phi * 180 / Math.PI).toFixed(1)}°`;
                     break;
             }
             
             document.getElementById('circuitType').textContent = circuitName;
             document.getElementById('circuitFormula').textContent = formula;
             
-            return {
-                Umax, Ueff, Imax, Ieff, phi, Pactive, Z, omega, f, 
-                circuitName, formula, R, L, C
-            };
+            return { Umax, Ueff, Imax, Ieff, phi, Pactive, Z, omega, f, circuitName, formula, R, L, C };
         }
         
         function updateMeasurements() {
@@ -515,140 +478,89 @@
             document.getElementById('powerApparent').textContent = (params.Ueff * params.Ieff).toFixed(0) + ' VA';
         }
         
-        function drawGrid() {
-            ctx.strokeStyle = '#2d3748';
-            ctx.lineWidth = 1;
-            
-            // Grille verticale (périodes)
-            for(let i = 0; i <= canvas.width; i += 50) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, canvas.height);
-                ctx.stroke();
-            }
-            
-            // Grille horizontale
-            for(let i = 0; i <= canvas.height; i += 40) {
-                ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(canvas.width, i);
-                ctx.stroke();
-            }
-            
-            // Axes principaux
-            ctx.strokeStyle = '#68d391';
-            ctx.lineWidth = 2;
-            
-            // Axe central pour tension/courant
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height * 0.3);
-            ctx.lineTo(canvas.width, canvas.height * 0.3);
-            ctx.stroke();
-            
-            // Axe zéro pour puissance
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height * 0.75);
-            ctx.lineTo(canvas.width, canvas.height * 0.75);
-            ctx.stroke();
-            
-            // Graduations temps
-            ctx.fillStyle = '#68d391';
-            ctx.font = '12px Courier New';
-            ctx.fillText('0', 5, canvas.height - 5);
-            ctx.fillText('T/2', canvas.width/2 - 10, canvas.height - 5);
-            ctx.fillText('T', canvas.width - 15, canvas.height - 5);
-        }
-        
+        // ========== CORRECTION CRITIQUE : Échelle de courant FIXE ==========
         function drawStaticCurves() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawGrid();
+            
+            // Grille
+            ctx.strokeStyle = '#2d3748'; ctx.lineWidth = 1;
+            for(let i = 0; i <= canvas.width; i += 50) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for(let i = 0; i <= canvas.height; i += 40) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+            
+            // Axes
+            ctx.strokeStyle = '#68d391'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, canvas.height * 0.3); ctx.lineTo(canvas.width, canvas.height * 0.3); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, canvas.height * 0.75); ctx.lineTo(canvas.width, canvas.height * 0.75); ctx.stroke();
             
             const showTension = document.getElementById('showTension').checked;
             const showCourant = document.getElementById('showCourant').checked;
             const showPuissance = document.getElementById('showPuissance').checked;
             
-            // Échelles optimisées
-            const xScale = canvas.width / (2 * 2 * Math.PI); // 2 périodes
+            // Échelles
+            const xScale = canvas.width / (2 * 2 * Math.PI);
             const yScaleVoltage = (canvas.height * 0.25) / params.Umax;
-            const yScaleCurrent = (canvas.height * 0.25) / (params.Imax || 1);
-            const yScalePower = (canvas.height * 0.20) / (params.Umax * params.Imax || 1);
+            
+            // ========== CORRECTION : Échelle de courant BASÉE sur Umax (FIXE) ==========
+            // L'échelle du courant est maintenant proportionnelle à l'échelle tension
+            // avec une impedance de référence de 100Ω pour que les variations soient VISIBLES
+            const REFERENCE_IMPEDANCE = 100; // Ω, valeur de référence pour l'échelle
+            const yScaleCurrent = (canvas.height * 0.25) / (params.Umax / REFERENCE_IMPEDANCE);
+            
+            const yScalePower = (canvas.height * 0.20) / (params.Umax * (params.Umax / REFERENCE_IMPEDANCE));
             
             const centerVoltage = canvas.height * 0.3;
             const centerCurrent = canvas.height * 0.3;
             const basePower = canvas.height * 0.75;
             
-            ctx.lineWidth = 3;
-            
-            // Dessiner les courbes
-            for(let x = 0; x < canvas.width; x++) {
-                const t = (x / canvas.width) * 2 * (2 * Math.PI / params.omega); // 2 périodes
-                const omega_t = params.omega * t;
-                
-                const u = params.Umax * Math.sin(omega_t);
-                const i = params.Imax * Math.sin(omega_t - params.phi);
-                const p = u * i;
-                
-                const yU = centerVoltage - u * yScaleVoltage;
-                const yI = centerCurrent - i * yScaleCurrent;
-                const yP = basePower - p * yScalePower;
-                
-                if(x > 0) {
-                    const prev_t = ((x-1) / canvas.width) * 2 * (2 * Math.PI / params.omega);
-                    const prev_omega_t = params.omega * prev_t;
-                    
-                    const prev_u = params.Umax * Math.sin(prev_omega_t);
-                    const prev_i = params.Imax * Math.sin(prev_omega_t - params.phi);
-                    const prev_p = prev_u * prev_i;
-                    
-                    const prev_yU = centerVoltage - prev_u * yScaleVoltage;
-                    const prev_yI = centerCurrent - prev_i * yScaleCurrent;
-                    const prev_yP = basePower - prev_p * yScalePower;
-                    
-                    // Tension (rouge)
-                    if(showTension) {
-                        ctx.strokeStyle = '#ff6b6b';
-                        ctx.beginPath();
-                        ctx.moveTo(x-1, prev_yU);
-                        ctx.lineTo(x, yU);
-                        ctx.stroke();
-                    }
-                    
-                    // Courant (cyan)
-                    if(showCourant) {
-                        ctx.strokeStyle = '#4ecdc4';
-                        ctx.beginPath();
-                        ctx.moveTo(x-1, prev_yI);
-                        ctx.lineTo(x, yI);
-                        ctx.stroke();
-                    }
-                    
-                    // Puissance (jaune)
-                    if(showPuissance) {
-                        ctx.strokeStyle = '#ffe66d';
-                        ctx.lineWidth = 2;
-                        ctx.beginPath();
-                        ctx.moveTo(x-1, prev_yP);
-                        ctx.lineTo(x, yP);
-                        ctx.stroke();
-                        ctx.lineWidth = 3;
-                    }
+            // Tension
+            if(showTension) {
+                ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 3; ctx.beginPath();
+                for(let x = 0; x < canvas.width; x += 2) {
+                    const t = (x / canvas.width) * 2 * (2 * Math.PI / params.omega);
+                    const y = centerVoltage - params.Umax * Math.sin(params.omega * t) * yScaleVoltage;
+                    if(x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
+                ctx.stroke();
             }
             
-            // Labels des axes
-            ctx.fillStyle = '#68d391';
-            ctx.font = 'bold 14px Arial';
+            // Courant (AMPLITUDE VARIABLE DÉSORMÁIS VISIBLE)
+            if(showCourant) {
+                ctx.strokeStyle = '#4ecdc4'; ctx.lineWidth = 3; ctx.beginPath();
+                for(let x = 0; x < canvas.width; x += 2) {
+                    const t = (x / canvas.width) * 2 * (2 * Math.PI / params.omega);
+                    const y = centerCurrent - params.Imax * Math.sin(params.omega * t - params.phi) * yScaleCurrent;
+                    if(x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+            
+            // Puissance
+            if(showPuissance) {
+                ctx.strokeStyle = '#ffe66d'; ctx.lineWidth = 2; ctx.beginPath();
+                for(let x = 0; x < canvas.width; x += 2) {
+                    const t = (x / canvas.width) * 2 * (2 * Math.PI / params.omega);
+                    const omega_t = params.omega * t;
+                    const p = params.Umax * Math.sin(omega_t) * params.Imax * Math.sin(omega_t - params.phi);
+                    const y = basePower - p * yScalePower;
+                    if(x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+            
+            // Labels
+            ctx.fillStyle = '#68d391'; ctx.font = 'bold 14px Arial';
             ctx.fillText('TENSION u(t)', 10, centerVoltage - 5);
             ctx.fillText('INTENSITÉ i(t)', 10, centerVoltage + 15);
             ctx.fillText('PUISSANCE p(t)', 10, basePower - 5);
-            
-            updateCursor(); // Positionner le curseur initial
         }
         
         function updateCursor() {
             const cursorPos = document.getElementById('timeCursor').value / 100;
             const x = cursorPos * canvas.width;
-            
             const t = cursorPos * 2 * (2 * Math.PI / params.omega);
             const omega_t = params.omega * t;
             
@@ -656,63 +568,43 @@
             const i = params.Imax * Math.sin(omega_t - params.phi);
             const p = u * i;
             
-            // Effacer curseur précédent
             drawStaticCurves();
             
-            // Dessiner le curseur vertical
-            ctx.strokeStyle = '#e53e3e';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.setLineDash([5, 5]);
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvas.height);
-            ctx.stroke();
+            // Curseur
+            ctx.strokeStyle = '#e53e3e'; ctx.lineWidth = 3; ctx.setLineDash([5, 5]);
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
             ctx.setLineDash([]);
             
-            // Mettre à jour la boîte d'informations
-            document.getElementById('cursorInfo').innerHTML = 
-                `u(t) = ${u.toFixed(1)} V<br>` +
-                `i(t) = ${i.toFixed(3)} A<br>` +
-                `p(t) = ${p.toFixed(1)} W<br>` +
-                `t = ${(cursorPos * 40).toFixed(1)} ms`;
-            
-            // Points de mesure
+            // Points
             const centerVoltage = canvas.height * 0.3;
             const centerCurrent = canvas.height * 0.3;
             const basePower = canvas.height * 0.75;
-            
             const yScaleVoltage = (canvas.height * 0.25) / params.Umax;
-            const yScaleCurrent = (canvas.height * 0.25) / (params.Imax || 1);
-            const yScalePower = (canvas.height * 0.20) / (params.Umax * params.Imax || 1);
+            const yScaleCurrent = (canvas.height * 0.25) / (params.Umax / 100);
+            const yScalePower = (canvas.height * 0.20) / (params.Umax * (params.Umax / 100));
             
             const yU = centerVoltage - u * yScaleVoltage;
             const yI = centerCurrent - i * yScaleCurrent;
             const yP = basePower - p * yScalePower;
             
-            // Cercles de mesure
             ctx.fillStyle = '#e53e3e';
-            ctx.beginPath();
-            ctx.arc(x, yU, 5, 0, 2 * Math.PI);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(x, yU, 5, 0, 2 * Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(x, yI, 5, 0, 2 * Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(x, yP, 5, 0, 2 * Math.PI); ctx.fill();
             
-            ctx.beginPath();
-            ctx.arc(x, yI, 5, 0, 2 * Math.PI);
-            ctx.fill();
-            
-            ctx.beginPath();
-            ctx.arc(x, yP, 5, 0, 2 * Math.PI);
-            ctx.fill();
+            document.getElementById('cursorInfo').innerHTML = 
+                `u(t) = ${u.toFixed(1)} V<br>i(t) = ${i.toFixed(3)} A<br>p(t) = ${p.toFixed(1)} W`;
         }
         
         function updateSimulation() {
             params = calculateCircuitParameters();
             updateMeasurements();
             drawStaticCurves();
+            updateCursor();
         }
         
         // Initialisation
-        ['resistance', 'inductance', 'capacitance', 'frequency', 'amplitude'].forEach(updateValue);
-        updateValue('timeCursor');
+        ['resistance', 'inductance', 'capacitance', 'frequency', 'amplitude', 'timeCursor'].forEach(updateValue);
         updateSimulation();
     </script>
 </body>

@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulation ExAO - Version Finale Corrigée</title>
     <style>
-        /* [Conservez les mêmes styles CSS de la version précédente] */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -252,11 +251,10 @@
             text-align: center;
         }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="container">
-        <h1>🧪 Simulation ExAO - Version Finale CORRIGÉE</h1>
+        <h1>🧪 Simulation ExAO - Version Finale Corrigée</h1>
         
         <div class="circuit-info">
             <h3>Circuit en cours : <span id="circuitType">Résistance pure</span></h3>
@@ -478,7 +476,6 @@
             document.getElementById('powerApparent').textContent = (params.Ueff * params.Ieff).toFixed(0) + ' VA';
         }
         
-        // ========== CORRECTION CRITIQUE : Échelle de courant FIXE ==========
         function drawStaticCurves() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -503,13 +500,8 @@
             // Échelles
             const xScale = canvas.width / (2 * 2 * Math.PI);
             const yScaleVoltage = (canvas.height * 0.25) / params.Umax;
-            
-            // ========== CORRECTION : Échelle de courant BASÉE sur Umax (FIXE) ==========
-            // L'échelle du courant est maintenant proportionnelle à l'échelle tension
-            // avec une impedance de référence de 100Ω pour que les variations soient VISIBLES
-            const REFERENCE_IMPEDANCE = 100; // Ω, valeur de référence pour l'échelle
+            const REFERENCE_IMPEDANCE = 100;
             const yScaleCurrent = (canvas.height * 0.25) / (params.Umax / REFERENCE_IMPEDANCE);
-            
             const yScalePower = (canvas.height * 0.20) / (params.Umax * (params.Umax / REFERENCE_IMPEDANCE));
             
             const centerVoltage = canvas.height * 0.3;
@@ -527,7 +519,7 @@
                 ctx.stroke();
             }
             
-            // Courant (AMPLITUDE VARIABLE DÉSORMÁIS VISIBLE)
+            // Courant
             if(showCourant) {
                 ctx.strokeStyle = '#4ecdc4'; ctx.lineWidth = 3; ctx.beginPath();
                 for(let x = 0; x < canvas.width; x += 2) {
